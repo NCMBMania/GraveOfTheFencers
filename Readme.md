@@ -1,10 +1,10 @@
 # コードの解説
 
-[資料](リンクを貼る予定)では説明できなかった、ニフティクラウドmobile backendのコードを解説します。
+[資料](https://speakerdeck.com/ncmb/akusiyongemuniyuru-isosiyaruxing-xie-li-ji-neng-wozuo-rimasiyou)では説明できなかった、ニフティクラウドmobile backendのコードを解説します。
 
 ## Grave情報の引き出し
 
-Graveの情報をデータストアから引き出すのはScript>DataStoreManager.csの「LoadGraveData（）」にて行っています。
+Graveの情報をデータストアから引き出すのはScript>DataStoreManager.csの「FetchGraveData（）」にて行っています。
 ニフティクラウド mobile backendの機能を使い、データストアから引き出す際にデータの作成日時順にソートし最新10件だけ取得するようにしています。
 
 取得した情報は独自に設定したGraveInfo型に成型し、
@@ -68,16 +68,16 @@ public class DataStoreManager : SingletonMonoBehaviour<DataStoreManager>
     }
 ```
 
-## ログイン・ログアウト・アカウント登録について
+## ログイン・アカウント登録について
 
-本プロジェクトではアカウント登録・ログイン・ログアウトをNCMBExtend(この配置は変わりますか？)>UserAuth.csで行っています。
+本プロジェクトではログイン・アカウント登録をScript>UserAuth.csで行っています。
 
-それぞれ「login」「logOut」「signUp」というメソッド名で実装されており
+それぞれ「login」「signUp」というメソッド名で実装されており
 ニフティクラウド mobile backendの会員管理機能を利用しています。
 
-### ログイン・ログアウトについて
+### ログインについて
 
-ログイン、ログアウトともにニフティクラウド mobile backendのメソッドを使っています。
+ログインはニフティクラウド mobile backendのメソッドを使っています。
 
 ```csharp:UserAuth.cs
 using NCMB;
@@ -107,23 +107,6 @@ public class UserAuth : SingletonMonoBehaviour<UserAuth>
             {
                 currentPlayerName = id;
                 if (callback != null) callback();
-            }
-        });
-    }
-
-    ・
-    ・一部省略
-    ・
-    // mobile backendに接続してログアウト ------------------------
-
-    public void logOut()
-    {
-    	//ニフティクラウド mobile backendのメソッドを使用
-        NCMBUser.LogOutAsync((NCMBException e) =>
-        {
-            if (e == null)
-            {
-                currentPlayerName = null;
             }
         });
     }
