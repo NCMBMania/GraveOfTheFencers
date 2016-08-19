@@ -6,7 +6,7 @@ public class GraveObjectsManager : SingletonMonoBehaviour<GraveObjectsManager>
 {
     public GameObject gravePrefab;
 
-    public int graveMaxNum = 20;
+    public int graveMaxNum = 10;
     public List<GameObject> graveInstanceList = new List<GameObject>();
     private GameObject tempGraveInstance;//Player死亡時に一時的に設置する墓//
 
@@ -17,8 +17,6 @@ public class GraveObjectsManager : SingletonMonoBehaviour<GraveObjectsManager>
             Destroy(this);
             return;
         }
-
-        //DontDestroyOnLoad(this.gameObject);
 
         tempGraveInstance = GenerateDisabledGameObject(gravePrefab, "TempGrave");
         graveInstanceList = InstantiateObjectsPool(gravePrefab, graveMaxNum);

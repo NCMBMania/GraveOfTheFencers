@@ -1,10 +1,16 @@
 ﻿using UnityEngine;
+using TSM;
 
 public class MainCamera : MonoBehaviour
 {
     public Transform playerObject;
     private float originY;
     private float margineZ;
+
+    void OnValidate()
+    {
+        playerObject = FindObjectOfType<Player>().gameObject.transform;
+    }
 
     private void Awake()
     {

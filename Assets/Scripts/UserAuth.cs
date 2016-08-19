@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class UserAuth : SingletonMonoBehaviour<UserAuth>
 {
+    //public bool isGuestMode;
     private string currentPlayerName;
     private void Awake()
     {
@@ -18,12 +19,7 @@ public class UserAuth : SingletonMonoBehaviour<UserAuth>
 
     // mobile backendに接続してログイン ------------------------
 
-    public void logIn(string id, string pw)
-    {
-        logIn(id, pw, null);
-    }
-
-    public void logIn(string id, string pw, Action callback)
+    public void LogIn(string id, string pw, Action callback)
     {
         NCMBUser.LogInAsync(id, pw, (NCMBException e) =>
         {
@@ -38,12 +34,7 @@ public class UserAuth : SingletonMonoBehaviour<UserAuth>
 
     // mobile backendに接続して新規会員登録 ------------------------
 
-    public void signUp(string id, string mail, string pw)
-    {
-        signUp(id, mail, pw, null);
-    }
-
-    public void signUp(string id, string mail, string pw, Action callback)
+    public void SignUp(string id, string mail, string pw, Action callback)
     {
         NCMBUser user = new NCMBUser();
         user.UserName = id;
@@ -61,7 +52,7 @@ public class UserAuth : SingletonMonoBehaviour<UserAuth>
 
     // mobile backendに接続してログアウト ------------------------
 
-    public void logOut()
+    public void LogOut()
     {
         NCMBUser.LogOutAsync((NCMBException e) =>
         {
@@ -76,5 +67,12 @@ public class UserAuth : SingletonMonoBehaviour<UserAuth>
     public string CurrentPlayerName()
     {
         return currentPlayerName;
+    }
+
+    //ゲストモードでユーザー名を保存する//
+    public void SetGuestName(string name, Action callback)
+    {
+        currentPlayerName = name;
+        if (callback != null) callback();
     }
 }

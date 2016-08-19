@@ -7,7 +7,7 @@ public class OnTriggerEnterDetector : MonoBehaviour
 {
     private Collider thisCollider;
 
-    void Reset()
+    void OnValidate()
     {
         GetComponent<Collider>().isTrigger = true;
     }

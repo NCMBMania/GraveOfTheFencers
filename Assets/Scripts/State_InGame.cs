@@ -1,20 +1,23 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using TSM;
 
 public class State_InGame : SingletonMonoBehaviour<State_InGame>
 {
-    public enum InGameState { Default, Pause, ShowMessage, PlayerDead, PlayerWin }
+    public enum InGameState { Game, Pause, ShowMessage, PlayerDead, PlayerWin, Loading }
 
     [SerializeField]
-    private InGameState currentInGameState = InGameState.Default;
+    private InGameState currentInGameState = InGameState.Game;
 
     public UI_InGame ui_InGame;
     public GameObject ui_SetDeathMessage;
     public GameObject ui_InGameObject;
 
+    public List<IGameActor> GameActorList = new List<IGameActor>();
     public List<Enemy> EnemyList = new List<Enemy>();
-    private Player player;
+
+    public Player player;
     private Grave currentGrave;
 
     private void Awake()
@@ -26,48 +29,60 @@ public class State_InGame : SingletonMonoBehaviour<State_InGame>
         }
     }
 
+    void OnValidate()
+    {
+        player = FindObjectOfType<Player>();
+    }
+
     private void Start()
     {
         ui_SetDeathMessage.SetActive(false);
         ui_InGameObject.SetActive(true);
 
-        EnemyList.ForEach(list => list.Initialize());
-        player = Player.Instance;
+        Restart();
+    }
 
+    public void Restart()
+    {
+        currentInGameState = InGameState.Loading;
+        SoundManager.Instance.StopBGM();
         DataStoreManager.Instance.FetchGraveData(StartGame);
     }
+
+    private void StartGame()
+    {
+        currentInGameState = InGameState.Game;
+
+        player.OnWalk();
+
+        Main.Instance.DisableUI_Connecting();
+        SoundManager.Instance.PlayBGM("Dysipe_1_loop");
+    }
+
 
     void Update()
     {
         switch (currentInGameState)
         {
-            case InGameState.Default:
+            case InGameState.Game:
                 
-                if (!EnemyList.Any(enemy => enemy.IsAlive))
+                if (allEnemyDead)
                 {
                     PlayerWin();
                 }
-                break;
-            case InGameState.Pause:
-                break;
-            case InGameState.ShowMessage:
-                break;
-            case InGameState.PlayerDead:
-                break;
-            case InGameState.PlayerWin:
                 break;
             default:
                 break;
         }
     }
 
-    private void StartGame()
+    bool allEnemyDead
     {
-        currentInGameState = InGameState.Default;
-
-        Main.Instance.DisableUI_Connecting();
-        SoundManager.PlayBGM("Dysipe_1_loop");
+        get {
+            return !EnemyList.Any(enemy => enemy.IsAlive);
+        }
     }
+
 
     public void SaveGraveInfo(string deathMessage, GraveInfo.CurseType curseType)
     {
@@ -91,7 +106,7 @@ public class State_InGame : SingletonMonoBehaviour<State_InGame>
         player.OnResume();
         EnemyList.ForEach(list => list.OnResume());
 
-        currentInGameState = InGameState.Default;
+        currentInGameState = InGameState.Game;
     }
 
     public void ShowDeathMessage(Grave grave)
@@ -108,6 +123,11 @@ public class State_InGame : SingletonMonoBehaviour<State_InGame>
 
     public void CloseDeathMessageWithPray()
     {
+        if(currentGrave == null)
+        {
+
+        }
+
         switch (currentGrave.graveInfo.curseType)
         {
             case GraveInfo.CurseType.None:
@@ -116,14 +136,14 @@ public class State_InGame : SingletonMonoBehaviour<State_InGame>
             case GraveInfo.CurseType.Damage:
                 player.AddLifePoint(-30);
                 player.ShowDamageEffect();
-                SoundManager.PlaySE("Damage");
+                SoundManager.Instance.PlaySE("Damage");
                 break;
 
             case GraveInfo.CurseType.Heal:
 
                 player.AddLifePoint(30);
                 player.ShowHealEffect();
-                SoundManager.PlaySE("Heal");
+                SoundManager.Instance.PlaySE("Heal");
 
                 break;
 
@@ -141,7 +161,7 @@ public class State_InGame : SingletonMonoBehaviour<State_InGame>
         player.OnResume();
         EnemyList.ForEach(list => list.OnResume());
 
-        currentInGameState = InGameState.Default;
+        currentInGameState = InGameState.Game;
     }
 
     public void PlayerDead(Vector3 deathPosition)
@@ -165,7 +185,7 @@ public class State_InGame : SingletonMonoBehaviour<State_InGame>
 
     public void PlayerWin()
     {
-        player.OnPause();
+        player.OnWait();
         currentInGameState = InGameState.PlayerWin;
         ui_InGame.ShowWin();
     }

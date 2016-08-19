@@ -4,18 +4,21 @@ using UnityEngine.SceneManagement;
 
 public class State_Login : MonoBehaviour
 {
-    private enum LogInState { LogIn, SignUp};
+    private enum LogInState { LogIn, SignUp, Guest};
 
     private LogInState currentLogInState;
 
     private UserAuth userAuth;
 
-    public InputField inputFieldID;
-    public InputField inputFieldPass;
-    public InputField inputFieldMail;
+    public InputField inputField_ID;
+    public InputField inputField_Pass;
+    public InputField inputField_Mail;
+    public InputField inputField_Name;
 
-    public Canvas canvasLogIn;
-    public Canvas canvasSignUp;
+    public Canvas canvas_General;
+    public Canvas canvas_LogIn;
+    public Canvas canvas_SignUp;
+    public Canvas canvas_Guest;
 
     private void Awake()
     {
@@ -28,29 +31,43 @@ public class State_Login : MonoBehaviour
     {
         currentLogInState = LogInState.LogIn;
 
-        canvasLogIn.enabled = true;
-        canvasSignUp.enabled = false;
+        canvas_General.enabled = true;
+        canvas_LogIn.enabled = true;
+        canvas_SignUp.enabled = false;
+        canvas_Guest.enabled = false;
 
-        inputFieldMail.text = string.Empty;
+        inputField_Mail.text = string.Empty;
     }
 
     public void OnSignUpMode()
     {
         currentLogInState = LogInState.SignUp;
 
-        canvasLogIn.enabled = false;
-        canvasSignUp.enabled = true;
+        canvas_General.enabled = true;
+        canvas_LogIn.enabled = false;
+        canvas_SignUp.enabled = true;
+        canvas_Guest.enabled = false;
+    }
+
+    public void OnGuestMode()
+    {
+        currentLogInState = LogInState.Guest;
+
+        canvas_General.enabled = false;
+        canvas_LogIn.enabled = false;
+        canvas_SignUp.enabled = false;
+        canvas_Guest.enabled = true;
     }
 
     public void StartLogInProcess()
     {
-        string id = inputFieldID.text;
-        string pass = inputFieldPass.text;
+        string id = inputField_ID.text;
+        string pass = inputField_Pass.text;
 
         if (!string.IsNullOrEmpty(id) &&
             !string.IsNullOrEmpty(pass))
         {
-            userAuth.logIn(id, pass, StartGame);
+            userAuth.LogIn(id, pass, StartGame);
         }
         else
         {
@@ -60,15 +77,15 @@ public class State_Login : MonoBehaviour
 
     public void StartSignUpProcess()
     {
-        string id = inputFieldID.text;
-        string pass = inputFieldPass.text;
-        string mail = inputFieldMail.text;
+        string id = inputField_ID.text;
+        string pass = inputField_Pass.text;
+        string mail = inputField_Mail.text;
 
         if (!string.IsNullOrEmpty(id) &&
             !string.IsNullOrEmpty(pass) &&
             !string.IsNullOrEmpty(mail))
         {
-            userAuth.signUp(id, mail, pass, StartGame);
+            userAuth.SignUp(id, mail, pass, StartGame);
         }
         else
         {
@@ -76,6 +93,12 @@ public class State_Login : MonoBehaviour
         }
     }
 
+    public void StartAsGuest()
+    {
+        string name = inputField_Name.text;
+        userAuth.SetGuestName(name,StartGame);
+    }
+    
     public void StartGame()
     {
         Main.Instance.OnInGame();

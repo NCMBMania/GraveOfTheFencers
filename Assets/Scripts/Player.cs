@@ -1,46 +1,34 @@
 ﻿using UnityEngine;
 using UnityStandardAssets.CrossPlatformInput;
 
-[RequireComponent(typeof(CharacterController))]
-public class Player : SingletonMonoBehaviour<Player>, IGameActor
+[RequireComponent(typeof (NavMeshAgent))]
+public class Player : GameActorBase, IGameActor
 {
-    private Vector3 originPos;
-    private CharacterController characterController;
-    public Animator playerAnimator;
+    private UI_InGame ui_InGame;
 
+    public int lifePoint = 100;
     public int currentLifePoint = 0;
-    private const int DEFAULT_LIFEPOINT = 100;
-    private State_InGame state_InGame;
 
     public float moveSpeed = 10f;
     public float rotateSpeed = 5f;
 
-    public OnTriggerEnterDetector hitArea;
-
     public ParticleSystem particle_Heal;
     public ParticleSystem particle_Damage;
 
-    private enum State { Walk, Dead, Attack }
+    private enum State { Wait, Walk, Dead, Attack }
 
     [SerializeField]
-    private State currentState = State.Walk;
+    private State currentState = State.Wait;
+    public bool isAttackAnimation = false;
 
-    private bool isPaused = false;
-    public bool isAttacking = false;
-
-    private void Awake()
+    public override void Awake()
     {
-        if (this != Instance)
-        {
-            Destroy(this);
-            return;
-        }
+        base.Awake();
 
-        characterController = GetComponent<CharacterController>();
-        hitArea.callBack = AttackHit;
+        ui_InGame = UI_InGame.Instance;
     }
 
-    private void AttackHit(Collider col)
+    public override void OnAttackHit(Collider col)
     {
         if (col.tag == "Enemy")
         {
@@ -48,50 +36,26 @@ public class Player : SingletonMonoBehaviour<Player>, IGameActor
         }
     }
 
-    private void Start()
+    public override void Start()
     {
-        state_InGame = State_InGame.Instance;
-        originPos = this.gameObject.transform.position;
-
-        Initialize();
-    }
-
-    public void Initialize()
-    {
-        currentLifePoint = DEFAULT_LIFEPOINT;
-        UI_InGame.Instance.SetLifeBar(currentLifePoint);
-
-        this.gameObject.SetActive(true);
-        this.gameObject.transform.position = originPos;
-    }
-
-    public void OnPause()
-    {
-        playerAnimator.speed = 0f;
-        hitArea.enabled = false;
-        isPaused = true;
-    }
-
-    public void OnResume()
-    {
-        playerAnimator.speed = 1f;
-        hitArea.enabled = true;
-
-        isPaused = false;
+        base.Start();
+        AddLifePoint(lifePoint);
     }
 
     public void AddLifePoint(int point)
     {
         currentLifePoint += point;
 
-        if (currentLifePoint > 100) currentLifePoint = 100;
-
-        if (currentLifePoint <= 0)
+        if (currentLifePoint > 100)
+        {
+            currentLifePoint = 100;
+        }
+        else if (currentLifePoint <= 0)
         {
             state_InGame.PlayerDead(this.gameObject.transform.localPosition);
         }
 
-        UI_InGame.Instance.SetLifeBar(currentLifePoint);
+        ui_InGame.SetLifeBar(currentLifePoint);
     }
 
     public void OnPlayerDead()
@@ -105,70 +69,76 @@ public class Player : SingletonMonoBehaviour<Player>, IGameActor
         currentState = State.Walk;
     }
 
+    public void OnWait()
+    {
+        currentState = State.Wait;
+        animator.SetFloat("Walk", 0f);
+        animator.SetTrigger("Idle");
+    }
+
     public void UpdateWalk()
     {
         float h = CrossPlatformInputManager.GetAxis("Horizontal");
         float v = CrossPlatformInputManager.GetAxis("Vertical");
 
-
+        //移動//
         Vector3 moveDirection = h * Vector3.right + v * Vector3.forward;
         moveDirection = moveSpeed * moveDirection.normalized;
+        navMeshAgent.velocity = moveDirection;
 
-        characterController.SimpleMove(moveDirection);
-
-        float walkAmount = Mathf.Max(Mathf.Abs(h), Mathf.Abs(v));
-        playerAnimator.SetFloat("Walk", walkAmount);
-
-        if (CrossPlatformInputManager.GetButtonDown("Fire1"))
-        {
-            OnAttack();
-        }
-
-        moveDirection.y = 0;
-
+        //回転//
         if (moveDirection.sqrMagnitude > 0.001)
         {
             float step = rotateSpeed * Time.deltaTime;
             Vector3 newDir = Vector3.RotateTowards(transform.forward, moveDirection, step, 0f);
             transform.rotation = Quaternion.LookRotation(newDir);
         }
+
+        //アニメーション更新//
+        float walkAmount = Mathf.Max(Mathf.Abs(h), Mathf.Abs(v));
+        animator.SetFloat("Walk", walkAmount);
+
+        //攻撃ボタン判定//
+        if (CrossPlatformInputManager.GetButtonDown("Fire1"))
+        {
+            OnAttack();
+        }
     }
 
     private void OnAttack()
     {
         currentState = State.Attack;
-        playerAnimator.SetTrigger("Attack");
+        animator.SetTrigger("Attack");
     }
 
-    public void RecieveAnimationState(string name, bool enabled)
+    public override void RecieveAnimationState(string name, bool enabled)
     {
         if (name == "Attack")
         {
-            isAttacking = enabled;
+            isAttackAnimation = enabled;
         }
     }
 
     private void UpdateAttack()
     {
-        if (isAttacking == false)
+        if (isAttackAnimation == false)
         {
             OnWalk();
         }
     }
 
-    private void Update()
+    public void Update()
     {
-        if (isPaused) return;
+        if (IsPaused)
+        {
+            return;
+        }
 
         switch (currentState)
         {
             case State.Walk:
                 UpdateWalk();
                 break;
-
-            case State.Dead:
-                break;
-
             case State.Attack:
                 UpdateAttack();
                 break;

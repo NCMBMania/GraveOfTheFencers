@@ -5,15 +5,15 @@ using System.Collections;
 [RequireComponent(typeof(NavMeshObstacle))]
 public class Grave : MonoBehaviour
 {
-    Transform playerTransform;
+    public Transform playerTransform;
     UI_InGame inGameUIManager;
     public Transform graveMessagePoint;
 
     public GraveInfo graveInfo;
 
-    void Start()
+    void Awake()
     {
-        playerTransform = Player.Instance.gameObject.transform;
+        playerTransform = FindObjectOfType<Player>().gameObject.transform;
         inGameUIManager = UI_InGame.Instance;
     }
 

@@ -4,13 +4,27 @@ using System;
 
 public static class AudioSourceExtentions  {
 
-    public static IEnumerator FadeIn(this AudioSource source, float fadeTime, Action callback)
+    public static IEnumerator FadeIn(this AudioSource audioSource, float fadeTime, Action callback)
     {
-        while (source.volume > 0f)
+        audioSource.volume = 0f;
+        audioSource.Play();
+        while (audioSource.volume < 1f)
         {
-            source.volume -= Time.deltaTime / fadeTime;
+            audioSource.volume += Time.deltaTime / fadeTime;
             yield return null;
         }
-        callback();
+        if(callback != null) callback();
+    }
+
+    public static IEnumerator FadeOut(this AudioSource audioSource, float fadeTime, Action callback)
+    {
+        while (audioSource.volume > 0f)
+        {
+            audioSource.volume -= Time.deltaTime / fadeTime;
+            yield return null;
+        }
+        audioSource.Stop();
+        audioSource.clip = null;
+        if (callback != null) callback();
     }
 }

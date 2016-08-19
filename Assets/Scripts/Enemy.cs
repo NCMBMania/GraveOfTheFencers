@@ -1,47 +1,46 @@
 ﻿using UnityEngine;
 
-public class Enemy : MonoBehaviour, IGameActor
+[RequireComponent(typeof(AudioSource))]
+[RequireComponent(typeof(Animator))]
+public class Enemy : GameActorBase, IGameActor
 {
-    public GameObject target;
-    public Animator thisAnimator;
-    public NavMeshAgent navMeshAgent;
-
     private enum EnemyState { Roaming, FollowPlayer, Attack, Dead, Disable }
 
     [SerializeField]
     private EnemyState currentEnemyState = EnemyState.Roaming;
 
-    public bool IsPaused = false;
-
-    private float playerFindDistance = 5f;
-    private float playerAttackDistance = 1.3f;
-    private float defaultMoveSpeed;
-
-    public Collider roamingArea;
-    private Vector3 defaultPosition;
-    private float attackInterval = 2f;
+    public float playerFindDistance = 5f;
+    public float playerAttackDistance = 1.3f;
+    public float attackInterval = 2f;
     private float attackTimer = 0f;
 
-    private State_InGame state_InGame;
+    public Collider roamingArea;//行動範囲//
 
-    public OnTriggerEnterDetector hitArea;
-    public Collider attackArea;
+    private GameObject target;
+    private Vector3 defaultPosition;
+    private float defaultMoveSpeed;
 
-    public void RecieveAnimationState(string name, bool enabled)
+    public override void Awake()
     {
+        base.Awake();
 
-    }
+        target = FindObjectOfType<Player>().gameObject;
 
-    private void Awake()
-    {
         defaultPosition = this.gameObject.transform.position;
-
         defaultMoveSpeed = navMeshAgent.speed;
-
-        hitArea.callBack = AttackHit;
     }
 
-    private void AttackHit(Collider col)
+    public override void Start()
+    {
+        base.Start();
+
+        state_InGame.EnemyList.Add(this);
+        currentEnemyState = EnemyState.Roaming;
+
+        this.gameObject.transform.position = defaultPosition;
+    }
+
+    public override void OnAttackHit(Collider col)
     {
         if (col.tag == "Player")
         {
@@ -49,15 +48,7 @@ public class Enemy : MonoBehaviour, IGameActor
         }
     }
 
-    private void Start()
-    {
-        state_InGame = State_InGame.Instance;
-        state_InGame.EnemyList.Add(this);
-        //state_InGame.EnemyList.Add(this);
-        hitArea.enabled = true;
-    }
-
-    private void Update()
+    public void Update()
     {
         if (IsPaused)
         {
@@ -94,7 +85,7 @@ public class Enemy : MonoBehaviour, IGameActor
 
     private void OnAttack()
     {
-        thisAnimator.SetTrigger("Attack");
+        animator.SetTrigger("Attack");
         currentEnemyState = EnemyState.Attack;
         navMeshAgent.speed = 0f;
     }
@@ -115,9 +106,9 @@ public class Enemy : MonoBehaviour, IGameActor
         currentEnemyState = EnemyState.FollowPlayer;
     }
 
-    void UpdateWalkAnimation()
+    private void UpdateWalkAnimation()
     {
-        thisAnimator.SetFloat("Walk", navMeshAgent.velocity.sqrMagnitude);
+        animator.SetFloat("Walk", navMeshAgent.velocity.sqrMagnitude);
     }
 
     private void UpdateFollowPlayer()
@@ -149,7 +140,8 @@ public class Enemy : MonoBehaviour, IGameActor
 
     private void UpdateRoaming()
     {
-        if (navMeshAgent.remainingDistance < 1.0f)
+        if (navMeshAgent.enabled == true && //nullが出ることがある？
+            navMeshAgent.remainingDistance < 1.0f)
         {
             SetRandomDestination();
         }
@@ -162,14 +154,25 @@ public class Enemy : MonoBehaviour, IGameActor
         }
     }
 
-    private void OnDead()
+    public override void OnDead()
     {
         currentEnemyState = EnemyState.Dead;
+        animator.SetTrigger("Death");
 
-        hitArea.enabled = false;
-        attackArea.enabled = false;
         navMeshAgent.speed = 0f;
-        thisAnimator.SetTrigger("Death");
+        navMeshAgent.enabled = false;
+
+        base.OnDead();
+    }
+
+    public override void OnPause()
+    {
+        base.OnPause();
+    }
+
+    public override void OnResume()
+    {
+        base.OnResume();
     }
 
     private void SetRandomDestination()
@@ -208,45 +211,13 @@ public class Enemy : MonoBehaviour, IGameActor
         return false;
     }
 
-    public void Initialize()
-    {
-        currentEnemyState = EnemyState.Roaming;
-
-        this.gameObject.transform.position = defaultPosition;
-    }
-
-    public void OnPause()
-    {
-        IsPaused = true;
-        thisAnimator.speed = 0f;
-        hitArea.enabled = false;
-
-        if (navMeshAgent.isOnNavMesh == true)
-        {
-            navMeshAgent.velocity = Vector3.zero;
-            navMeshAgent.Stop();
-        }
-    }
-
-    public void OnResume()
-    {
-        IsPaused = false;
-        thisAnimator.speed = 1f;
-        hitArea.enabled = true;
-
-        if (navMeshAgent != null && navMeshAgent.isOnNavMesh)
-        {
-            navMeshAgent.Resume();
-        }
-    }
-
     public void OnPlayerDead()
     {
         currentEnemyState = EnemyState.Roaming;
     }
 
-    public bool IsAlive {
+    public bool IsAlive
+    {
         get { return currentEnemyState != EnemyState.Dead; }
     }
-
 }
