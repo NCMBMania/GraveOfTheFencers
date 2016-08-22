@@ -54,6 +54,12 @@ public abstract class GameActorBase : MonoBehaviour, IGameActor
 
     public void PlaySE3D(string seName)
     {
+        if (audioClips.Count == 0 || audioClips[0] == null)
+        {
+            Debug.Log("Error no audioclip at " + this.gameObject.name);
+            return;
+        }
+
         AudioClip audioClip = audioClips.Find(clip => clip.name == seName);
         if (audioClip != null)
         {
