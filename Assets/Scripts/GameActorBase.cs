@@ -54,8 +54,16 @@ public abstract class GameActorBase : MonoBehaviour, IGameActor
 
     public void PlaySE3D(string seName)
     {
-        audioSource.clip = audioClips.Find(clip => clip.name == seName);
-        audioSource.Play();
+        AudioClip audioClip = audioClips.Find(clip => clip.name == seName);
+        if (audioClip != null)
+        {
+            audioSource.clip = audioClip;
+            audioSource.Play();
+        }
+        else
+        {
+            Debug.Log("Not Found SE " + seName +" from AudioClip list");
+        }
     }
 
     public virtual void RecieveAnimationState(string name, bool enabled)
