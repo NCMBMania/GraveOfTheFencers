@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using UnityStandardAssets.CrossPlatformInput;
 
-[RequireComponent(typeof (NavMeshAgent))]
 public class Player : GameActorBase, IGameActor
 {
     private UI_InGame ui_InGame;

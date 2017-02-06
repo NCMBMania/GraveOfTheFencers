@@ -1,5 +1,9 @@
 ﻿using UnityEngine;
 
+#if UNITY_5_5_OR_NEWER
+using UnityEngine.AI;
+#endif
+
 [RequireComponent(typeof(AudioSource))]
 [RequireComponent(typeof(Animator))]
 public class Enemy : GameActorBase, IGameActor

@@ -1,5 +1,8 @@
 ﻿using UnityEngine;
-using System.Collections;
+
+#if UNITY_5_5_OR_NEWER
+using UnityEngine.AI;
+#endif
 
 [RequireComponent(typeof(BoxCollider))]
 [RequireComponent(typeof(NavMeshObstacle))]
