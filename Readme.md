@@ -2,7 +2,7 @@
 
 [資料](https://speakerdeck.com/ncmb/akusiyongemuniyuru-isosiyaruxing-xie-li-ji-neng-wozuo-rimasiyou)では説明できなかった、ニフティクラウドmobile backendのコードを解説します。
 
-*Unity 5.5.1fにて動作を確認しています。
+Unity 5.5.1fにて動作を確認しています。
 
 ## Grave情報の引き出し
 
